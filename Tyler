@@ -1,7 +1,10 @@
 local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
 
-local gui = Instance.new("ScreenGui", player.PlayerGui)
+-- ✅ GUI (PERSIST AFTER DEATH)
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
+gui.ResetOnSpawn = false
 
 -- ===== TARGET =====
 local target = Instance.new("Frame", gui)
