@@ -1,0 +1,151 @@
+local UIS = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
+
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+
+-- ===== TARGET =====
+local target = Instance.new("Frame", gui)
+target.Size = UDim2.new(0,70,0,70)
+target.Position = UDim2.new(0.5,-35,0.5,-35)
+target.BackgroundTransparency = 1
+target.Active = true
+target.Draggable = true
+
+-- outer ring
+local ring1 = Instance.new("Frame", target)
+ring1.Size = UDim2.new(1,0,1,0)
+ring1.BackgroundTransparency = 1
+ring1.BorderSizePixel = 3
+ring1.BorderColor3 = Color3.fromRGB(0,170,255)
+Instance.new("UICorner", ring1).CornerRadius = UDim.new(1,0)
+
+-- inner ring
+local ring2 = Instance.new("Frame", target)
+ring2.Size = UDim2.new(0.7,0,0.7,0)
+ring2.Position = UDim2.new(0.15,0,0.15,0)
+ring2.BackgroundTransparency = 1
+ring2.BorderSizePixel = 2
+ring2.BorderColor3 = Color3.fromRGB(100,200,255)
+Instance.new("UICorner", ring2).CornerRadius = UDim.new(1,0)
+
+-- center dot
+local dot = Instance.new("Frame", target)
+dot.Size = UDim2.new(0,8,0,8)
+dot.Position = UDim2.new(0.5,-4,0.5,-4)
+dot.BackgroundColor3 = Color3.fromRGB(0,170,255)
+dot.BorderSizePixel = 0
+Instance.new("UICorner", dot).CornerRadius = UDim.new(1,0)
+
+-- ===== MENU =====
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0,240,0,220)
+frame.Position = UDim2.new(0.7,0,0.6,0)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.Active = true
+frame.Draggable = true
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,10)
+
+-- title
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0,30)
+title.Text = "Click Settings"
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(0,170,255)
+
+-- toggle
+local toggle = Instance.new("TextButton", frame)
+toggle.Size = UDim2.new(1,-20,0,35)
+toggle.Position = UDim2.new(0,10,0,35)
+toggle.Text = "Auto Click: OFF"
+toggle.BackgroundColor3 = Color3.fromRGB(50,50,50)
+toggle.TextColor3 = Color3.new(1,1,1)
+
+-- input
+local input = Instance.new("TextBox", frame)
+input.Size = UDim2.new(0.6,0,0,30)
+input.Position = UDim2.new(0.05,0,0,80)
+input.PlaceholderText = "Delay"
+input.Text = "0.1"
+input.BackgroundColor3 = Color3.fromRGB(45,45,45)
+input.TextColor3 = Color3.new(1,1,1)
+
+-- unit switch
+local unitBtn = Instance.new("TextButton", frame)
+unitBtn.Size = UDim2.new(0.3,0,0,30)
+unitBtn.Position = UDim2.new(0.7,0,0,80)
+unitBtn.Text = "Seconds"
+unitBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+
+local units = {"ms","s","m"}
+local currentUnit = 2
+
+unitBtn.MouseButton1Click:Connect(function()
+	currentUnit += 1
+	if currentUnit > #units then currentUnit = 1 end
+	local names = {ms="Milliseconds", s="Seconds", m="Minutes"}
+	unitBtn.Text = names[units[currentUnit]]
+end)
+
+-- ===== SIZE CONTROLS =====
+local size = 70
+
+local sizeLabel = Instance.new("TextLabel", frame)
+sizeLabel.Size = UDim2.new(1,0,0,20)
+sizeLabel.Position = UDim2.new(0,0,0,120)
+sizeLabel.Text = "Size: 70"
+sizeLabel.BackgroundTransparency = 1
+sizeLabel.TextColor3 = Color3.new(1,1,1)
+
+local plus = Instance.new("TextButton", frame)
+plus.Size = UDim2.new(0.45,0,0,30)
+plus.Position = UDim2.new(0.05,0,0,150)
+plus.Text = "+"
+plus.BackgroundColor3 = Color3.fromRGB(60,120,200)
+
+local minus = Instance.new("TextButton", frame)
+minus.Size = UDim2.new(0.45,0,0,30)
+minus.Position = UDim2.new(0.5,0,0,150)
+minus.Text = "-"
+minus.BackgroundColor3 = Color3.fromRGB(200,80,80)
+
+local function resizeTarget(newSize)
+	local center = target.AbsolutePosition + target.AbsoluteSize/2
+
+	target.Size = UDim2.new(0,newSize,0,newSize)
+	target.Position = UDim2.new(0, center.X - newSize/2, 0, center.Y - newSize/2)
+
+	size = newSize
+	sizeLabel.Text = "Size: "..size
+end
+
+plus.MouseButton1Click:Connect(function()
+	resizeTarget(math.clamp(size + 10, 30, 160))
+end)
+
+minus.MouseButton1Click:Connect(function()
+	resizeTarget(math.clamp(size - 10, 30, 160))
+end)
+
+-- ===== LOOP =====
+local running = false
+
+local function getDelay()
+	local val = tonumber(input.Text)
+	if not val then return 0.1 end
+	local unit = units[currentUnit]
+
+	if unit == "ms" then return val/1000 end
+	if unit == "s" then return val end
+	if unit == "m" then return val*60 end
+end
+
+toggle.MouseButton1Click:Connect(function()
+	running = not running
+	toggle.Text = running and "Auto Click: ON" or "Auto Click: OFF"
+
+	while running do
+		task.wait(getDelay())
+		local pos = target.AbsolutePosition + target.AbsoluteSize/2
+		game:GetService("VirtualUser"):ClickButton1(pos)
+	end
+end)
